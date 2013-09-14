@@ -10,28 +10,50 @@ import com.fasterxml.jackson.core.`type`.TypeReference
 import java.lang.reflect.{ParameterizedType, Type}
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import com.fasterxml.jackson.module.scala.DefaultScalaModule
+import com.fasterxml.jackson.module.scala._
+import com.fasterxml.jackson.module.scala.deser.UntypedObjectDeserializerModule
+
+
+case class Foo(strings:Seq[String], longs:Seq[Long])
 
 @RunWith(classOf[JUnitRunner])
-class HogeTest extends FunSuite with ShouldMatchers {
+class NullValueAsEmptySeqDeserializerTest extends DeserializerTest with FlatSpec with ShouldMatchers {
+  def module = NullValueAsEmptySeqScalaModule
 
-  test("An empty list should be empty") {
-    List() should be('empty)
-    Nil should be('empty)
+  "foo" should "be" in {
+    val result = Foo(Seq("a","b","c"), Seq(1l,2l,3l))
+    deserialize[Foo]( """{"strings":["a","b","c"], "longs": [1,2,3]}""") should be(result)
   }
 
-  test("A non-empty list should not be empty") {
-    List(1, 2, 3) should not be ('empty)
-    List("fee", "fie", "foe", "fum") should not be ('empty)
+  "foo" should "bee" in {
+    val result = Foo(Seq(), Seq())
+    deserialize[Foo]( """{"strings":[], "longs": []}""") should be(result)
   }
 
-  test("A list's length should equal the number of elements it contains") {
-    List() should have length (0)
-    List(1, 2) should have length (2)
-    List("fee", "fie", "foe", "fum") should have length (4)
+  "foo" should "beee" in {
+    val result = Foo(Seq(), Seq())
+    deserialize[Foo]( """{}""") should be(result)
   }
+
 }
 
+sealed class NullValueAsEmptySeqScalaModule
+  extends JacksonModule
+  with IteratorModule
+  with EnumerationModule
+  with OptionModule
+  with MySeqModule
+  with IterableModule
+  with TupleModule
+  with MapModule
+  with CaseClassModule
+  with SetModule
+  with UntypedObjectDeserializerModule
+{
+  override def getModuleName = "NullValueAsEmptySeqScalaModule"
+}
+
+object NullValueAsEmptySeqScalaModule extends NullValueAsEmptySeqScalaModule
 
 class Bean(var prop: String)
 
@@ -144,10 +166,10 @@ trait DeserializerTest extends JacksonTest {
 
   private[this] def typeFromManifest(m: Manifest[_]): Type = {
     if (m.typeArguments.isEmpty) {
-      m.erasure
+      m.runtimeClass
     }
     else new ParameterizedType {
-      def getRawType = m.erasure
+      def getRawType = m.runtimeClass
 
       def getActualTypeArguments = m.typeArguments.map(typeFromManifest).toArray
 
