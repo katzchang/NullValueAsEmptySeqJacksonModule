@@ -1,4 +1,4 @@
-package samples
+package myjackson
 
 import com.fasterxml.jackson.core.JsonParser
 
@@ -77,7 +77,7 @@ private class SeqDeserializer(collectionType: JavaType, containerDeserializer: C
       case wrapper: BuilderWrapper[_] => wrapper.builder.result()
     }
 
-  override def getNullValue = mutable.Seq.empty
+  override def getNullValue = Seq.empty
 }
 
 private object SeqDeserializerResolver extends Deserializers.Base {
